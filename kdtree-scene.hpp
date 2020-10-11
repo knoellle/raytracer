@@ -23,8 +23,8 @@ class KDTreeScene: public Scene
     public:
         KDTreeScene();
 
-        void build_tree();
-        bool hit(const Ray& r, const double t_min, const double t_max, HitData &data) const override;
+        virtual void update() override;
+        virtual bool hit(const Ray& r, const double t_min, const double t_max, HitData &data) const override;
 
     private:
         std::shared_ptr<KDN> construct(std::vector<std::shared_ptr<Entity>> entities, const int depth);
@@ -37,15 +37,11 @@ bool KDN::hit(const Ray& r, const double t_min, const double t_max, HitData &dat
     {
         return false;
     }
-    // data.debugColor = Vec3(1);
-    // data.debug = true;
-    // data.debugCounter++;
     if (depth == data.debugStep)
     {
-        data.debugColor = f ? Vec3(1,0,0) : Vec3(0,1,0);//Vec3(static_cast<double>(ID)/ID_counter,0,0);
-        data.debug = true;
+        data.debugColor = f ? Vec3(1,0,0) : Vec3(0,1,0);
+        // data.debug = true;
         data.debugCounter++;
-        // return true;
     }
 
     std::shared_ptr<KDN> first;
@@ -92,8 +88,6 @@ bool KDN::hit(const Ray& r, const double t_min, const double t_max, HitData &dat
         if (e->hit(r, t_min, closest_hit, data))
         {
             closest_hit = data.t;
-            // closest_hit = temp_data.t;
-            // data = temp_data;
         }
     }
     return closest_hit < t_max;
@@ -103,8 +97,9 @@ KDTreeScene::KDTreeScene()
 {
 }
 
-void KDTreeScene::build_tree()
+void KDTreeScene::update()
 {
+    Scene::update();
     rootNode = construct(entities, 0);
 }
 
@@ -113,21 +108,16 @@ bool KDTreeScene::hit(const Ray& r, const double t_min, const double t_max, HitD
     // A tree exists, use it to find hit points
     if (rootNode)
     {
-        // std::cout << "Using KDTree" << std::endl;
         return rootNode->hit(r, t_min, t_max, data);
     }
 
     // There is no tree, naively check all entities
-    // std::cerr << "KDTreeScene has no root node. Falling back to naive iteration" << std::endl;
-    // HitData temp_data;
     double closest_hit = t_max;
     for (const auto &e : entities)
     {
         if (e->hit(r, t_min, closest_hit, data))
         {
             closest_hit = data.t;
-            // closest_hit = temp_data.t;
-            // data = temp_data;
         }
     }
     return closest_hit < t_max;
@@ -186,14 +176,6 @@ std::shared_ptr<KDN> KDTreeScene::construct(const std::vector<std::shared_ptr<En
     std::vector<std::shared_ptr<Entity>> rightEntities;
     for (auto& entity : entities)
     {
-        // if (entity->boundingBox.low[splitAxis] < averagePosition[splitAxis])
-        // {
-        //     leftEntities.emplace_back(entity);
-        // }
-        // if (entity->boundingBox.high[splitAxis] > averagePosition[splitAxis])
-        // {
-        //     rightEntities.emplace_back(entity);
-        // }
         if (entity->transform[splitAxis] < averagePosition[splitAxis])
         {
             leftEntities.emplace_back(entity);
