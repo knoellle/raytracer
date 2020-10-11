@@ -11,15 +11,21 @@ public:
                                                                             dimensions(dimensions),
                                                                             material(material)
     {
-        boundingBox.low = center - dimensions / 2.0;
-        boundingBox.high = center + dimensions / 2.0;
-        transform = center;
+        Box::update();
     }
-    virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const;
+    virtual void update() override;
+    virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const override;
     Vec3 center;
     Vec3 dimensions;
     std::shared_ptr<Material> material;
 };
+
+void Box::update()
+{
+    boundingBox.low = center - dimensions / 2.0;
+    boundingBox.high = center + dimensions / 2.0;
+    transform = center;
+}
 
 bool Box::hit(const Ray &r, const double t_min, const double t_max, HitData &data) const
 {

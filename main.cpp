@@ -112,7 +112,7 @@ KDTreeScene make_test_scene()
     // spawn_sphere(scene, Vec3(0, 0, 0), 0.25, red_felt);
     // spawn_sphere(scene, Vec3(0.5, 0, 0), 0.5, steel);
 
-    scene.build_tree();
+    scene.update();
 
     return scene;
 }

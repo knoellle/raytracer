@@ -4,11 +4,12 @@
 #include <vector>
 #include "entity.hpp"
 
-class Scene
+class Scene: public Entity
 {
     public:
         Scene() {};
         virtual bool hit(const Ray& r, const double t_min, const double t_max, HitData &data) const;
+        virtual void update();
         std::vector<std::shared_ptr<Entity>> entities;
 };
 
@@ -25,4 +26,12 @@ bool Scene::hit(const Ray& r, const double t_min, const double t_max, HitData &d
         }
     }
     return closest_hit < t_max;
+}
+
+void Scene::update()
+{
+    for (auto &e : entities)
+    {
+        e->update();
+    }
 }

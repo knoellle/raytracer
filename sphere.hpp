@@ -12,15 +12,21 @@ class Sphere: public Entity
             radius(radius),
             material(material)
         {
-            boundingBox.low = center - Vec3(radius);
-            boundingBox.high = center + Vec3(radius);
-            transform = center;
+            Sphere::update();
         }
-        virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const;
+        virtual void update() override;
+        virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const override;
         Vec3 center;
         double radius;
         std::shared_ptr<Material> material;
 };
+
+void Sphere::update()
+{
+    boundingBox.low = center - Vec3(radius);
+    boundingBox.high = center + Vec3(radius);
+    transform = center;
+}
 
 bool Sphere::hit(const Ray &r, const double t_min, const double t_max, HitData &data) const
 {

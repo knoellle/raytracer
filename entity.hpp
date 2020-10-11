@@ -29,6 +29,7 @@ struct AABB
 class Entity
 {
     public:
+        virtual void update() = 0;
         virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const = 0;
         AABB boundingBox;
         Vec3 transform;
