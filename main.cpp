@@ -160,6 +160,9 @@ int main()
         
         // Render image
         int current = 0;
+        int last = 0;
+        double average_pixel_per_second = 0.0f;
+        static const double alpha = 0.1;
         std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
         std::transform(std::execution::par_unseq, indices.begin(), indices.end(), image.pixels.begin(), [&](int index) {
             std::chrono::steady_clock::time_point pixel_start_time = std::chrono::steady_clock::now();
@@ -188,13 +191,16 @@ int main()
                 {
                     const int64_t total = width * height;
                     const double progress = (double)current / total;
-                    const double pixel_per_second = (double)current / ((std::chrono::steady_clock::now() - start_time).count() / 1000000000.0f);
-                    const double time_remaining = (total - current) / pixel_per_second;
+                    // const double pixel_per_second = (double)current / ((std::chrono::steady_clock::now() - start_time).count() / 1000000000.0f);
+                    const double pixel_per_second = (double) (current - last) / ((std::chrono::steady_clock::now() - last_update).count() / 1000000000.0f);
+                    average_pixel_per_second = alpha * pixel_per_second + (1.0f - alpha) * average_pixel_per_second;
+                    const double time_remaining = (total - current) / average_pixel_per_second;
                     std::cout << "\r" << std::fixed << std::setprecision(2);
                     std::cout << (double)progress * 100.0f << "% "
-                              << "pps: " << pixel_per_second << " ETA: " << time_remaining << "s";
+                              << "pps: " << average_pixel_per_second << " ETA: " << time_remaining << "s";
                     std::cout << std::flush;
                     last_update = std::chrono::steady_clock::now();
+                    last = current;
                 }
             }
             Pixel pixel;
@@ -204,7 +210,8 @@ int main()
             return pixel;
         });
 
-        const double duration = (double)((std::chrono::steady_clock::now() - start_time).count() / 1000000000.0f);
+        const double duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count() / 1000.0f;
+
         std::cout << "\n" << "Total time: " << duration << "s\n";
 
         auto filepath = std::ostringstream();
