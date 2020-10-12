@@ -199,7 +199,8 @@ int main()
             return std::make_tuple(c[2], c[1], c[0]);
         });
 
-        std::cout << "\n";
+        const double duration = (double)((std::chrono::steady_clock::now() - start_time).count() / 1000000000.0f);
+        std::cout << "\n" << "Total time: " << duration << "s\n";
 
         // Write image
         // std::vector<unsigned char> image_8bit;
