@@ -8,9 +8,6 @@
 #include <thread>
 #include <iomanip>
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 #include "vec3.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
@@ -22,6 +19,7 @@
 #include "lambertian.hpp"
 #include "kdtree-scene.hpp"
 #include "box.hpp"
+#include "image.hpp"
 
 Vec3 color(const Ray &r, const KDTreeScene &scene, const int depth, const int step)
 {
@@ -140,7 +138,9 @@ int main()
 
     std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
 
-    std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> image(width * height);
+    // std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> image(width * height);
+    Image image;
+    image.set_dimensions(width, height);
 
     std::mutex counter_mutex;
     std::vector<int> indices(width * height);
@@ -167,7 +167,8 @@ int main()
         float radius = 0.45;
         int current = 0;
         std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
-        std::transform(std::execution::par_unseq, indices.begin(), indices.end(), image.begin(), [&](int index) {
+        std::transform(std::execution::par_unseq, indices.begin(), indices.end(), image.pixels.begin(), [&](int index) {
+            std::chrono::steady_clock::time_point pixel_start_time = std::chrono::steady_clock::now();
             const int j = height - index / width;
             const int i = index % width;
             Vec3 c{0, 0, 0};
@@ -179,7 +180,9 @@ int main()
                 c += color(r, s, 0, substep);
             }
             c /= samples;
-            c = gamma_correct(c, 2.0f) * 255.99;
+            // double duration = (std::chrono::steady_clock::now() - pixel_start_time).count() / 5000.0f / samples;
+            const auto duration = std::chrono::steady_clock::now() - pixel_start_time;
+            c = gamma_correct(c, 2.0f);
             {
                 std::lock_guard lock{counter_mutex};
                 ++current;
@@ -196,30 +199,22 @@ int main()
                     last_update = std::chrono::steady_clock::now();
                 }
             }
-            return std::make_tuple(c[2], c[1], c[0]);
+            Pixel pixel;
+            pixel.color = c;
+            pixel.depth = t;
+            pixel.time = duration;
+            return pixel;
         });
 
         const double duration = (double)((std::chrono::steady_clock::now() - start_time).count() / 1000000000.0f);
         std::cout << "\n" << "Total time: " << duration << "s\n";
 
-        // Write image
-        // std::vector<unsigned char> image_8bit;
-        // for (int j = height - 1; j >= 0; j--)
-        // {
-        //     for (int i = 0; i < width; i++)
-        //     {
-        //         const Vec3 color = gamma_correct(image[i + j * width], 2.0f);
-        //         const int ir = int(255.99 * color[0]);
-        //         const int ig = int(255.99 * color[1]);
-        //         const int ib = int(255.99 * color[2]);
-        //         image_8bit.emplace_back(ir);
-        //         image_8bit.emplace_back(ig);
-        //         image_8bit.emplace_back(ib);
-        //     }
-        // }
         auto filepath = std::ostringstream();
         filepath << "data/" << std::setfill('0') << std::setw(3) << step << ".png";
+
+        image.write_color_image(filepath.str());
+        // image.write_time_image(filepath.str());
+
         std::cout << "Writing " << filepath.str() << "\n";
-        stbi_write_png(filepath.str().c_str(), width, height, 3, image.data(), width * 3);
     }
 }
