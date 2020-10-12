@@ -134,7 +134,8 @@ int main()
 
     auto s = make_test_scene();
     // Sphere &ball = dynamic_cast<Sphere &>(*s.entities[1]);
-    Camera camera;
+    Camera camera(Vec3(0,0,1), Vec3(0), 50, static_cast<double>(width) / height);
+    // camera.up = Vec3(0,-1,0);
 
     std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
 
@@ -152,17 +153,14 @@ int main()
         if (f < 0.5)
         {
             f = f * 2.0f;
-            camera.origin = lerp(f, Vec3(0,0,1), Vec3(-1,0,0)) * 3;
-            camera.horizontal = lerp(f, Vec3(1,0,0), Vec3(0,0,1)) * 2; // 2 0 0  0 0 -2
-            camera.bottom_left = lerp(f, Vec3(0,0,-1), Vec3(1,0,0)) - camera.horizontal / 2 - camera.vertical / 2;
+            camera.transform = lerp(f, Vec3(0,0,1), Vec3(-1,0,0)) * 3;
         }
         else
         {
             f = f * 2.0f - 1.0f;
-            camera.origin = lerp(f, Vec3(-1,0,0), Vec3(0,0,-1)) * 3;
-            camera.horizontal = lerp(f, Vec3(0,0,1), Vec3(-1,0,0)) * 2; // 2 0 0  0 0 -2
-            camera.bottom_left = lerp(f, Vec3(1,0,0), Vec3(0,0,1)) - camera.horizontal / 2 - camera.vertical / 2;
+            camera.transform = lerp(f, Vec3(-1,0,0), Vec3(0,0,-1)) * 3;
         }
+        camera.update();
         
         // Render image
         float radius = 0.45;
