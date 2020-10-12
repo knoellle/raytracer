@@ -128,6 +128,7 @@ std::shared_ptr<KDN> KDTreeScene::construct(const std::vector<std::shared_ptr<En
     auto node = std::make_shared<KDN>();
     node->left = 0;
     node->right = 0;
+    node->axis = 0;
     node->depth = depth;
 
     if (entities.size() == 0)
