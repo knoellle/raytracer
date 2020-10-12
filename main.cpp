@@ -21,40 +21,35 @@
 #include "box.hpp"
 #include "image.hpp"
 
-Vec3 color(const Ray &r, const KDTreeScene &scene, const int depth, const int step)
+Vec3 color(const Ray &r, const KDTreeScene &scene, const int depth, HitData &data)
 {
-    HitData data;
     data.debugCounter = 0;
-    data.debugStep = step;
     if (scene.hit(r, 0.001, 1000, data))
     {
-        // return data.normal;
-        // return Vec3(1-data.t/5);
         Ray scattered;
         Vec3 attenuation;
         if (data.debug)
         {
-            return data.debugColor * 1.0f / data.debugCounter;
+            return data.debugColor * (1.0f - 1.0f / data.debugCounter);
         }
         if (data.material->scatter(r, data, attenuation, scattered))
         {
-            if (depth < 50) 
+            if (depth < 5)
             {
-                return attenuation * color(scattered, scene, depth + 1, step);
+                HitData data;
+                data.debugCounter = 0;
+                return attenuation * color(scattered, scene, depth + 1, data);
             }
             else
             {
                 return attenuation;
             }
         }
-        else
-        {
-            return Vec3(0, 0, 0);
-        }
+        return Vec3(0);
     }
     if (data.debug)
     {
-        return data.debugColor * 1.0f / data.debugCounter;
+        return data.debugColor * (1.0f - 1.0f / data.debugCounter);
     }
     Vec3 unit_direction = r.direction().normalized();
     double t = 0.5 * (unit_direction.y() + 1.0f);
@@ -164,7 +159,6 @@ int main()
         camera.update();
         
         // Render image
-        float radius = 0.45;
         int current = 0;
         std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
         std::transform(std::execution::par_unseq, indices.begin(), indices.end(), image.pixels.begin(), [&](int index) {
@@ -172,13 +166,17 @@ int main()
             const int j = height - index / width;
             const int i = index % width;
             Vec3 c{0, 0, 0};
+            double t = 0;
             for (int sample = 0; sample < samples; sample++)
             {
+                HitData data;
                 const double u = float(i + distribution(random_generator)) / float(width);
                 const double v = float(j + distribution(random_generator)) / float(height);
                 const Ray r = camera.getRay(u, v);
-                c += color(r, s, 0, substep);
+                c += color(r, s, 0, data);
+                t += data.t;
             }
+            t /= samples;
             c /= samples;
             // double duration = (std::chrono::steady_clock::now() - pixel_start_time).count() / 5000.0f / samples;
             const auto duration = std::chrono::steady_clock::now() - pixel_start_time;
