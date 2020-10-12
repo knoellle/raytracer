@@ -117,9 +117,10 @@ KDTreeScene make_test_scene()
     return scene;
 }
 
-inline Vec3 lerp(double f, Vec3 v1, Vec3 v2)
+template<typename T>
+inline T lerp(double f, T a, T b)
 {
-    return (1.0f-f) * v1 + f * v2;
+    return (1.0f - f) * a + f * b;
 }
 
 int main()
