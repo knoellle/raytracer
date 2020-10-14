@@ -72,24 +72,48 @@ auto spawn_box(Scene &scene, const Vec3 &position, const Vec3 &dimensions, const
 
 KDTreeScene make_test_scene()
 {
-    std::shared_ptr<Metal> steel = std::make_shared<Metal>(Vec3(0.8, 0.83, 0.8));
-    std::shared_ptr<Metal> iron = std::make_shared<Metal>(Vec3(0.1, 0.1, 0.8));
-    std::shared_ptr<Lambertian> felt = std::make_shared<Lambertian>(Vec3(0.8, 0.83, 0.8));
-    std::shared_ptr<Lambertian> red_felt = std::make_shared<Lambertian>(Vec3(0.8, 0.2, 0.2));
+    auto steel = std::make_shared<PhysicsMaterial>(
+        Vec3(0.2, 0.2, 0.2),
+        Vec3(0.8, 0.8, 0.8),
+        0.02
+    );
+    auto iron = std::make_shared<PhysicsMaterial>(
+        Vec3(0.2, 0.2, 0.2),
+        Vec3(0.4, 0.4, 0.4),
+        0.1
+    );
+    auto felt = std::make_shared<PhysicsMaterial>(
+        Vec3(0.8, 0.83, 0.8),
+        Vec3(0.0),
+        0.0
+    );
+    auto red_felt = std::make_shared<PhysicsMaterial>(
+        Vec3(0.8, 0.2, 0.2),
+        Vec3(0.0),
+        0.0
+    );
+    auto thing = std::make_shared<PhysicsMaterial>(
+        Vec3(0.5,0.2,0.2),
+        Vec3(0.2,0.5,0.2),
+        0.01
+    );
+    thing->emissive = Vec3(0.5);
 
     KDTreeScene scene;
 
-    spawn_sphere(scene, Vec3(0, -100.5, 0), 100, felt);
+    spawn_sphere(scene, Vec3(0, -100.5, 0), 100, steel);
 
     spawn_sphere(scene, Vec3(0.5, 0.5, 0), 0.25, iron);
 
     spawn_sphere(scene, Vec3(-1, 0, 0), 0.5, steel);
-    spawn_sphere(scene, Vec3(0, 0, 0), 0.25, red_felt);
+    spawn_sphere(scene, Vec3(0, 0, 0), 0.25, thing)->emissive = true;
     spawn_sphere(scene, Vec3(1, 0, 0), 0.5, steel);
-    for (int i = 0; i < 25; ++i)
+    int w = 5;
+    int h = 5;
+    for (int i = 0; i < w * h; ++i)
     {
-        Vec3 p = Vec3(i / 5, i % 5, 0) / 5 - Vec3(0.4);
-        p[2] = 0.25;
+        Vec3 p = Vec3(i / w, i % w, 0) / w - Vec3(0.4);
+        p[2] = 0.5f;
         spawn_sphere(scene, p, 0.09, steel);
     }
     spawn_box(scene, Vec3(0, 0, -1), Vec3(1, 1, 1), iron);
