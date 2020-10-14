@@ -116,7 +116,7 @@ inline T lerp(double f, T a, T b)
     return (1.0f - f) * a + f * b;
 }
 
-int main()
+int main(const int argc, const char* argv[])
 {
     const int metasteps = 2;
     const int substeps = 10;
@@ -127,13 +127,10 @@ int main()
     const int height = 1080 * resolution_factor;
 
     auto s = make_test_scene();
-    // Sphere &ball = dynamic_cast<Sphere &>(*s.entities[1]);
     Camera camera(Vec3(0,0,1), Vec3(0), 50, static_cast<double>(width) / height);
-    // camera.up = Vec3(0,-1,0);
 
     std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
 
-    // std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> image(width * height);
     Image image;
     image.set_dimensions(width, height);
 
@@ -173,17 +170,15 @@ int main()
             for (int sample = 0; sample < samples; sample++)
             {
                 HitData data;
-                const double u = float(i + distribution(random_generator)) / float(width);
-                const double v = float(j + distribution(random_generator)) / float(height);
+                const double u = float(i + random_unit() * 4) / float(width);
+                const double v = float(j + random_unit() * 4) / float(height);
                 const Ray r = camera.getRay(u, v);
                 c += color(r, s, 0, data);
                 t += data.t;
             }
             t /= samples;
             c /= samples;
-            // double duration = (std::chrono::steady_clock::now() - pixel_start_time).count() / 5000.0f / samples;
             const auto duration = std::chrono::steady_clock::now() - pixel_start_time;
-            c = gamma_correct(c, 2.0f);
             {
                 std::lock_guard lock{counter_mutex};
                 ++current;
@@ -217,8 +212,16 @@ int main()
         auto filepath = std::ostringstream();
         filepath << "data/" << std::setfill('0') << std::setw(3) << step << ".png";
 
-        image.write_color_image(filepath.str());
-        // image.write_time_image(filepath.str());
+        if (argc > 1)
+        {
+            image.write_time_image(filepath.str());
+        }
+        else
+        {
+            image.post_process(1.0f, 2.0f);
+            image.write_color_image(filepath.str());
+        }
+
 
         std::cout << "Writing " << filepath.str() << "\n";
     }
