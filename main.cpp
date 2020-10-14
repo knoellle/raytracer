@@ -56,23 +56,18 @@ Vec3 color(const Ray &r, const KDTreeScene &scene, const int depth, HitData &dat
     return (1.0f - t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0);
 }
 
-Vec3 gamma_correct(const Vec3 color, const double gamma)
-{
-    return Vec3(pow(color[0], 1 / gamma),
-                pow(color[1], 1 / gamma),
-                pow(color[2], 1 / gamma));
-}
-
-void spawn_sphere(Scene &scene, const Vec3 &position, const float radius, const std::shared_ptr<Material> &material)
+auto spawn_sphere(Scene &scene, const Vec3 &position, const float radius, const std::shared_ptr<Material> &material)
 {
     std::shared_ptr<Sphere> sphere = std::make_shared<Sphere>(position, radius, material);
-    scene.entities.emplace_back(std::move(sphere));
+    scene.entities.emplace_back(sphere);
+    return sphere;
 }
 
-void spawn_box(Scene &scene, const Vec3 &position, const Vec3 &dimensions, const std::shared_ptr<Material> &material)
+auto spawn_box(Scene &scene, const Vec3 &position, const Vec3 &dimensions, const std::shared_ptr<Material> &material)
 {
     std::shared_ptr<Box> box = std::make_shared<Box>(position, dimensions, material);
-    scene.entities.emplace_back(std::move(box));
+    scene.entities.emplace_back(box);
+    return box;
 }
 
 KDTreeScene make_test_scene()
