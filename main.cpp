@@ -17,43 +17,92 @@
 #include "material.hpp"
 #include "metal.hpp"
 #include "lambertian.hpp"
+#include "physics-material.hpp"
 #include "kdtree-scene.hpp"
 #include "box.hpp"
 #include "image.hpp"
 
-Vec3 color(const Ray &r, const KDTreeScene &scene, const int depth, HitData &data)
+#include "memory.hpp"
+
+
+Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &data)
 {
+    static const int light_samples = 10;
     data.debugCounter = 0;
-    if (scene.hit(r, 0.001, 1000, data))
+    Vec3 color(0.0f);
+    if (scene.hit(r, 0.001f, 1000.0f, data))
     {
-        Ray scattered;
-        Vec3 attenuation;
+        // return data.normal;
         if (data.debug)
         {
             return data.debugColor * (1.0f - 1.0f / data.debugCounter);
         }
+        Ray scattered;
+        Vec3 attenuation;
+
+        auto pbm = std::dynamic_pointer_cast<const PhysicsMaterial>(data.material);
+        assert(!pbm && "Non physics material");
+
+        double sunlight = 1.0f;
+        const Ray sunray = Ray(data.hit_point + data.normal * 0.001f, Vec3(1, 1 ,-1).normalized());
+        HitData dummydata;
+        if (scene.hit(sunray, 0.001f, 1000.0f, dummydata))
+        {
+            sunlight = 0.2f;
+        }
+        for (auto &e : scene.emissive_entities)
+        {
+            if (e == data.entity)
+            {
+                continue;
+            }
+            const Vec3 half_dimensions = (e->boundingBox.high - e->boundingBox.low) / 2.0f;
+            const double half_size = half_dimensions.length();
+            const double dist = (e->transform - data.hit_point).length();
+            const double max_dist = dist + half_size;
+            const double min_dist = dist - half_size;
+            HitData lightData;
+            for (int i=0; i < light_samples; ++i)
+            {
+                const Vec3 target = e->transform + random_unit_sphere() * half_size;
+                const Ray lightray = Ray(data.hit_point + data.normal * 0.001f, (target - data.hit_point).normalized());
+                if (scene.hit(lightray, 0.001f, max_dist, lightData))
+                {
+                    Vec3 light(0.0f);
+                    if (lightData.entity == e)
+                    {
+                        auto lightpbm = std::dynamic_pointer_cast<const PhysicsMaterial>(lightData.material);
+                        assert(!lightpbm"Non physics light material");
+
+                        light += lightpbm->emissive / (lightData.t * lightData.t);
+                    }
+                    color += pbm->diffuse * light / light_samples;
+                }
+            }
+        }
+        color += pbm->ambient;
+        color += pbm->emissive / (data.t * data.t);
+        color += pbm->diffuse * sunlight;
         if (data.material->scatter(r, data, attenuation, scattered))
         {
             if (depth < 5)
             {
-                HitData data;
-                data.debugCounter = 0;
-                return attenuation * color(scattered, scene, depth + 1, data);
-            }
-            else
-            {
-                return attenuation;
+                color += pbm->reflective * cast_ray(scattered, scene, depth + 1, data);
             }
         }
-        return Vec3(0);
     }
-    if (data.debug)
+    else
     {
-        return data.debugColor * (1.0f - 1.0f / data.debugCounter);
+        if (data.debug)
+        {
+            return data.debugColor * (1.0f - 1.0f / data.debugCounter);
+        }
+        Vec3 unit_direction = r.direction().normalized();
+        double t = 0.5 * (unit_direction.y() + 1.0f);
+        color += (1.0f - t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0);
+        color *= 0.1;
     }
-    Vec3 unit_direction = r.direction().normalized();
-    double t = 0.5 * (unit_direction.y() + 1.0f);
-    return (1.0f - t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0);
+    return color;
 }
 
 auto spawn_sphere(Scene &scene, const Vec3 &position, const float radius, const std::shared_ptr<Material> &material)
@@ -137,11 +186,11 @@ inline T lerp(double f, T a, T b)
 
 int main(const int argc, const char* argv[])
 {
-    const int metasteps = 2;
-    const int substeps = 10;
+    const int metasteps = 25;
+    const int substeps = 1;
     const int steps = metasteps * substeps;
-    const int samples = 1;
-    const double resolution_factor = 1;
+    const int samples = 10;
+    const double resolution_factor = 1.0;
     const int width = 1920 * resolution_factor;
     const int height = 1080 * resolution_factor;
 
@@ -185,7 +234,7 @@ int main(const int argc, const char* argv[])
                 const double u = float(i + random_unit() * 4) / float(width);
                 const double v = float(j + random_unit() * 4) / float(height);
                 const Ray r = camera.getRay(u, v);
-                c += color(r, s, 0, data);
+                c += cast_ray(r, s, 0, data);
                 t += data.t;
             }
             t /= samples;
