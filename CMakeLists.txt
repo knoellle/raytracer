@@ -11,6 +11,10 @@ find_package(Threads REQUIRED)
 
 include_directories(/usr/include/stb/)
 
+SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+SET(BUILD_SHARED_LIBS OFF)
+SET(CMAKE_EXE_LINKER_FLAGS "-static")
+
 add_executable(raytracer main.cpp)
 
 target_link_libraries(raytracer PRIVATE
