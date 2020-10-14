@@ -143,16 +143,9 @@ int main(const int argc, const char* argv[])
         int substep = step % substeps;
         std::cout << "Step: " << step << " Metastep: " << metastep << " Substep: " << substep << "\n";
         double f = metasteps < 2 ? 0.0f : (double) (metastep) / (metasteps - 1);
-        if (f < 0.5)
-        {
-            f = f * 2.0f;
-            camera.transform = lerp(f, Vec3(0,0,1), Vec3(-1,0,0)) * 3;
-        }
-        else
-        {
-            f = f * 2.0f - 1.0f;
-            camera.transform = lerp(f, Vec3(-1,0,0), Vec3(0,0,-1)) * 3;
-        }
+
+        double angle = lerp<double>(f, 45.0f, -315.0f) * M_PI / 180.0f;
+        camera.transform = Vec3(cos(angle), 0.5 + 0.5 * sin(angle), sin(angle)) * 3;
         camera.update();
         
         // Render image
