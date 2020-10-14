@@ -80,8 +80,8 @@ bool Box::hit(const Ray &r, const double t_min, const double t_max, HitData &dat
     const Vec3 direction = data.hit_point - transform;
     const Vec3 normal = (abs(direction[0]) > abs(direction[1]) && abs(direction[0]) > abs(direction[2])) ?
         Vec3(direction[0],0,0) : (abs(direction[1]) > abs(direction[2]) ? Vec3(0,direction[1],0) : Vec3(0,0,direction[2]));
-    // std::cout << direction << " " << normal << std::endl;
     data.normal = normal.normalized();
     data.material = material;
+    data.entity = shared_from_this();
     return true;
 }

@@ -5,6 +5,7 @@
 #include "ray.hpp"
 
 class Material;
+class Entity;
 
 struct HitData
 {
@@ -15,7 +16,8 @@ struct HitData
     int debugCounter;
     int debugStep;
     bool debug = false;
-    std::shared_ptr<Material> material;
+    std::shared_ptr<const Material> material;
+    std::shared_ptr<const Entity> entity;
 };
 
 struct AABB
@@ -26,13 +28,14 @@ struct AABB
     bool intersect(const Ray &r) const;
 };
 
-class Entity
+class Entity: public std::enable_shared_from_this<Entity>
 {
     public:
         virtual void update() = 0;
         virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const = 0;
         AABB boundingBox;
         Vec3 transform;
+        bool emissive;
 };
 
 void AABB::expand(const AABB &box)

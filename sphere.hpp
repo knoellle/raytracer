@@ -4,7 +4,7 @@
 
 #include "entity.hpp"
 
-class Sphere: public Entity
+class Sphere : public Entity
 {
     public:
         Sphere(Vec3 center, double radius, std::shared_ptr<Material> material):
@@ -54,5 +54,6 @@ bool Sphere::hit(const Ray &r, const double t_min, const double t_max, HitData &
     data.hit_point = r.point_at(t);
     data.normal = (data.hit_point - center) / radius;
     data.material = material;
+    data.entity = shared_from_this();
     return true;
 }

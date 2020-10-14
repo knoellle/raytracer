@@ -39,9 +39,9 @@ bool KDN::hit(const Ray& r, const double t_min, const double t_max, HitData &dat
     }
     if (depth == data.debugStep)
     {
-        data.debugColor = f ? Vec3(1,0,0) : Vec3(0,1,0);
+        // data.debugColor = f ? Vec3(1,0,0) : Vec3(0,1,0);
         // data.debug = true;
-        data.debugCounter++;
+        // data.debugCounter++;
     }
 
     std::shared_ptr<KDN> first;

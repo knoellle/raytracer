@@ -20,5 +20,5 @@ bool Lambertian::scatter(const Ray& r, const HitData &data, Vec3 &attenuation, R
     Vec3 target = data.hit_point + data.normal + random_unit_sphere();
     scattered = Ray(data.hit_point, target - data.hit_point);
     attenuation = albedo;
-    return dot(scattered.direction(), data.normal) > 0.0f;
+    return true;
 }
