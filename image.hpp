@@ -137,7 +137,7 @@ bool Image::write_depth_image(const std::string filepath, const double outlier_p
     auto base = *low;
     auto range = *high - base;
     // base = 0;
-    std::cout << *low << " " << *high << "\n";
+    std::cout << *low << " " << *high << " " << base << " " << range << "\n";
     // range = 5;
 
     std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> pixels_8bit;
