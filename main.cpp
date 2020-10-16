@@ -199,11 +199,13 @@ int main(const int argc, const char* argv[])
     Camera camera(Vec3(0,0,1), Vec3(0), 50, static_cast<double>(width) / height);
 
     std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point last_save = std::chrono::steady_clock::now();
 
     Image image;
     image.set_dimensions(width, height);
 
     std::mutex counter_mutex;
+    std::mutex image_save_mutex;
     std::vector<int> indices(width * height);
     std::iota(indices.begin(), indices.end(), 0);
     for (int step = 0; step < steps; step++)
@@ -242,7 +244,7 @@ int main(const int argc, const char* argv[])
             c /= samples;
             const auto duration = std::chrono::steady_clock::now() - pixel_start_time;
             {
-                std::lock_guard lock{counter_mutex};
+                counter_mutex.lock();
                 ++current;
                 if ((std::chrono::steady_clock::now() - last_update).count() / 1000000000.0f > .1f)
                 {
@@ -252,12 +254,37 @@ int main(const int argc, const char* argv[])
                     const double pixel_per_second = (double) (current - last) / ((std::chrono::steady_clock::now() - last_update).count() / 1000000000.0f);
                     average_pixel_per_second = alpha * pixel_per_second + (1.0f - alpha) * average_pixel_per_second;
                     const double time_remaining = (total - current) / average_pixel_per_second;
+                    last_update = std::chrono::steady_clock::now();
+
+                    counter_mutex.unlock();
+
                     std::cout << "\r" << std::fixed << std::setprecision(2);
                     std::cout << (double)progress * 100.0f << "% "
                               << "pps: " << average_pixel_per_second << " ETA: " << time_remaining << "s";
                     std::cout << std::flush;
-                    last_update = std::chrono::steady_clock::now();
                     last = current;
+                }
+                else
+                {
+                    counter_mutex.unlock();
+                }
+            }
+            {
+                image_save_mutex.lock();
+                if ((std::chrono::steady_clock::now() - last_save).count() / 1000000000.0f > 10.0f)
+                {
+                    Image temp_image = Image(image);
+                    last_save = std::chrono::steady_clock::now();
+                    image_save_mutex.unlock();
+
+                    auto filepath = std::ostringstream();
+                    filepath << "data/" << std::setfill('0') << std::setw(3) << step << ".png";
+                    temp_image.post_process(1.0f, 2.0f);
+                    temp_image.write_color_image(filepath.str());
+                }
+                else
+                {
+                    image_save_mutex.unlock();
                 }
             }
             Pixel pixel;
