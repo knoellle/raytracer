@@ -35,7 +35,7 @@ class Entity: public std::enable_shared_from_this<Entity>
         virtual bool hit(const Ray &r, const double t_min, const double t_max, HitData &data) const = 0;
         AABB boundingBox;
         Vec3 transform;
-        bool emissive;
+        bool emissive = false;
 };
 
 void AABB::expand(const AABB &box)
