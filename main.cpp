@@ -41,7 +41,7 @@ Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &
         Vec3 attenuation;
 
         auto pbm = std::dynamic_pointer_cast<const PhysicsMaterial>(data.material);
-        assert(!pbm && "Non physics material");
+        assert(pbm && "Non physics material");
 
         double sunlight = 1.0f;
         const Ray sunray = Ray(data.hit_point + data.normal * 0.001f, Vec3(1, 1 ,-1).normalized());
@@ -72,7 +72,7 @@ Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &
                     if (lightData.entity == e)
                     {
                         auto lightpbm = std::dynamic_pointer_cast<const PhysicsMaterial>(lightData.material);
-                        assert(!lightpbm"Non physics light material");
+                        assert(lightpbm && "Non physics light material");
 
                         light += lightpbm->emissive / (lightData.t * lightData.t);
                     }
