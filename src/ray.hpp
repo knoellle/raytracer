@@ -5,15 +5,15 @@
 class Ray
 {
     public:
-        Ray() {}
-        Ray(const Vec3& origin, const Vec3& direction) { _origin = origin; _direction = direction; }
+        Ray() = default;
+        Ray(const Vec3& origin, const Vec3& direction) { origin_ = origin; direction_ = direction; }
 
-        Vec3 origin() const { return _origin; }
-        Vec3 direction() const { return _direction; }
-        Vec3 point_at(const double t) const { return _origin + _direction * t; }
+        Vec3 origin() const { return origin_; }
+        Vec3 direction() const { return direction_; }
+        Vec3 pointAt(const double t) const { return origin_ + direction_ * t; }
 
     private:
-        Vec3 _origin;
-        Vec3 _direction;
+        Vec3 origin_;
+        Vec3 direction_;
 
 };
