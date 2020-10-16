@@ -1,13 +1,14 @@
 #pragma once
 
-#include <math.h>
-#include <stdlib.h>
+#include <array>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 
 class Vec3
 {
     public:
-        Vec3(double e0) { e[0] = e0; e[1] = e0; e[2] = e0; }
+        explicit Vec3(double e0) { e[0] = e0; e[1] = e0; e[2] = e0; }
         Vec3(double e0, double e1, double e2) { e[0] = e0; e[1] = e1; e[2] = e2; }
         Vec3() { e[0] = 0; e[1] = 0; e[2] = 0; }
         inline double x() const { return e[0]; }
@@ -18,7 +19,7 @@ class Vec3
         inline double b() const { return e[2]; }
 
         inline const Vec3& operator+() const { return *this; }
-        inline Vec3 operator-() const { return Vec3(-e[0], -e[1], -e[2]); }
+        inline Vec3 operator-() const { return {-e[0], -e[1], -e[2]}; }
         inline double operator[](int i) const { return e[i]; }
         inline double& operator[](int i) { return e[i]; }
 
@@ -26,24 +27,24 @@ class Vec3
         inline Vec3& operator-=(const Vec3 &v2);
         inline Vec3& operator*=(const Vec3 &v2);
         inline Vec3& operator/=(const Vec3 &v2);
-        inline Vec3& operator*=(const double f);
-        inline Vec3& operator/=(const double f);
+        inline Vec3& operator*=(const double &f);
+        inline Vec3& operator/=(const double &f);
 
         inline double length() const
         {
-            return sqrt(squared_length());
+            return sqrt(squaredLength());
         }
-        inline double squared_length() const
+        inline double squaredLength() const
         {
             return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
         }
         inline void normalize();
         inline Vec3 normalized() const;
 
-        double e[3];
+        std::array<double, 3> e = {};
 };
 
-inline std::istream& operator>>(std::istream &is, const Vec3 &v)
+inline std::istream& operator>>(std::istream &is, Vec3 &v)
 {
     is >> v.e[0] >> v.e[1] >> v.e[2];
     return is;
@@ -88,7 +89,7 @@ inline Vec3& Vec3::operator/=(const Vec3 &v)
     return *this;
 }
 
-inline Vec3& Vec3::operator*=(const double f)
+inline Vec3& Vec3::operator*=(const double &f)
 {
     e[0] *= f;
     e[1] *= f;
@@ -96,7 +97,7 @@ inline Vec3& Vec3::operator*=(const double f)
     return *this;
 }
 
-inline Vec3& Vec3::operator/=(const double f)
+inline Vec3& Vec3::operator/=(const double &f)
 {
     e[0] /= f;
     e[1] /= f;
@@ -106,37 +107,42 @@ inline Vec3& Vec3::operator/=(const double f)
 
 inline Vec3 operator+(const Vec3 &v1, const Vec3 &v2)
 {
-    return Vec3(v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]);
+    return {v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]};
 }
 
 inline Vec3 operator-(const Vec3 &v1, const Vec3 &v2)
 {
-    return Vec3(v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]);
+    return {v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]};
 }
 
 inline Vec3 operator*(const Vec3 &v1, const Vec3 &v2)
 {
-    return Vec3(v1[0] * v2[0], v1[1] * v2[1], v1[2] * v2[2]);
+    return {v1[0] * v2[0], v1[1] * v2[1], v1[2] * v2[2]};
 }
 
 inline Vec3 operator/(const Vec3 &v1, const Vec3 &v2)
 {
-    return Vec3(v1[0] / v2[0], v1[1] / v2[1], v1[2] / v2[2]);
+    return {v1[0] / v2[0], v1[1] / v2[1], v1[2] / v2[2]};
 }
 
 inline Vec3 operator*(double f, Vec3 v)
 {
-    return Vec3(v[0] * f, v[1] * f, v[2] * f);
+    return {v[0] * f, v[1] * f, v[2] * f};
 }
 
 inline Vec3 operator*(Vec3 v, double f)
 {
-    return Vec3(v[0] * f, v[1] * f, v[2] * f);
+    return {v[0] * f, v[1] * f, v[2] * f};
 }
 
 inline Vec3 operator/(Vec3 v, double f)
 {
-    return Vec3(v[0] / f, v[1] / f, v[2] / f);
+    return {v[0] / f, v[1] / f, v[2] / f};
+}
+
+inline Vec3 operator/(double f, Vec3 v)
+{
+    return {f / v[0], f / v[1], f / v[2]};
 }
 
 inline double dot(const Vec3 &v1, const Vec3 &v2)
@@ -146,9 +152,9 @@ inline double dot(const Vec3 &v1, const Vec3 &v2)
 
 inline Vec3 cross(const Vec3 &v1, const Vec3 &v2)
 {
-    return Vec3((v1[1] * v2[2] - v1[2] * v2[1]),
-               -(v1[0] * v2[2] - v1[2] * v2[0]),
-                (v1[0] * v2[1] - v1[1] * v2[0]));
+    return {(v1[1] * v2[2] - v1[2] * v2[1]),
+           -(v1[0] * v2[2] - v1[2] * v2[0]),
+            (v1[0] * v2[1] - v1[1] * v2[0])};
 }
 
 inline Vec3 reflect(const Vec3 &v, const Vec3 &normal)
@@ -167,5 +173,5 @@ inline void Vec3::normalize()
 inline Vec3 Vec3::normalized() const
 {
     double d = length();
-    return Vec3(e[0] / d, e[1] / d, e[2] / d);
+    return {e[0] / d, e[1] / d, e[2] / d};
 }
