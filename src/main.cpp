@@ -21,8 +21,6 @@
 #include "box.hpp"
 #include "image.hpp"
 
-#include "memory.hpp"
-
 
 Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &data)
 {

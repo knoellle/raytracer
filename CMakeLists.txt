@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(RayTracingInOneWeekend)
+project(Raytracer)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -15,7 +15,11 @@ SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 SET(BUILD_SHARED_LIBS OFF)
 SET(CMAKE_EXE_LINKER_FLAGS "-static")
 
-add_executable(raytracer main.cpp)
+set(SOURCES
+  src/main.cpp
+)
+
+add_executable(raytracer ${SOURCES})
 
 target_link_libraries(raytracer PRIVATE
   TBB::tbb
