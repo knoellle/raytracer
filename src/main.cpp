@@ -26,7 +26,7 @@
 
 Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &data)
 {
-    static const int light_samples = 10;
+    const int light_samples = 10;
     data.debugCounter = 0;
     Vec3 color(0.0f);
     if (scene.hit(r, 0.001f, 1000.0f, data))
@@ -80,7 +80,7 @@ Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &
             }
         }
         color += pbm->ambient;
-        color += pbm->emissive / (data.t * data.t);
+        color += pbm->emissive;
         color += pbm->diffuse * sunlight;
         HitData temp_data;
         if (data.material->scatter(r, data, attenuation, scattered))
@@ -186,7 +186,7 @@ inline T lerp(double f, T a, T b)
 
 int main(const int argc, const char* argv[])
 {
-    const int metasteps = 25;
+    const int metasteps = 250;
     const int substeps = 1;
     const int steps = metasteps * substeps;
     const int samples = 10;
@@ -195,7 +195,7 @@ int main(const int argc, const char* argv[])
     const int height = 1080 * resolution_factor;
 
     auto s = make_test_scene();
-    Camera camera(Vec3(0,0,1), Vec3(0), 50, static_cast<double>(width) / height);
+    Camera camera(Vec3(0,0,1), Vec3(-0.0001), 50, static_cast<double>(width) / height);
 
     std::chrono::steady_clock::time_point last_update = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point last_save = std::chrono::steady_clock::now();
@@ -214,10 +214,11 @@ int main(const int argc, const char* argv[])
         std::cout << "Step: " << step << " Metastep: " << metastep << " Substep: " << substep << "\n";
         double f = metasteps < 2 ? 0.0f : (double) (metastep) / (metasteps - 1);
 
-        double angle = lerp<double>(f, 45.0f, -315.0f) * M_PI / 180.0f;
-        camera.transform = Vec3(cos(angle), 0.5 + 0.5 * sin(angle), sin(angle)) * 3;
+        // double angle = lerp<double>(f, 45.0f, -315.0f) * M_PI / 180.0f;
+        // camera.transform = Vec3(cos(angle), 0.5 + 0.5 * sin(angle), sin(angle)) * 3;
+        camera.transform = lerp(f, Vec3(3), Vec3(0.0001));
         camera.update();
-        
+
         // Render image
         int current = 0;
         int last = 0;
