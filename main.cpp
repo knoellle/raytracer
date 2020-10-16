@@ -83,11 +83,12 @@ Vec3 cast_ray(const Ray &r, const KDTreeScene &scene, const int depth, HitData &
         color += pbm->ambient;
         color += pbm->emissive / (data.t * data.t);
         color += pbm->diffuse * sunlight;
+        HitData temp_data;
         if (data.material->scatter(r, data, attenuation, scattered))
         {
             if (depth < 5)
             {
-                color += pbm->reflective * cast_ray(scattered, scene, depth + 1, data);
+                color += pbm->reflective * cast_ray(scattered, scene, depth + 1, temp_data);
             }
         }
     }
@@ -273,17 +274,27 @@ int main(const int argc, const char* argv[])
         auto filepath = std::ostringstream();
         filepath << "data/" << std::setfill('0') << std::setw(3) << step << ".png";
 
-        if (argc > 1)
-        {
-            image.write_time_image(filepath.str());
-        }
-        else
+        std::cout << "Writing " << filepath.str() << "\n";
+        if (argc == 1)
         {
             image.post_process(1.0f, 2.0f);
             image.write_color_image(filepath.str());
         }
-
-
-        std::cout << "Writing " << filepath.str() << "\n";
+        else
+        {
+            if (strcmp(argv[1], "depth") == 0)
+            {
+                image.write_depth_image(filepath.str(), 0);
+            }
+            else if (strcmp(argv[1], "time") == 0)
+            {
+                image.write_time_image(filepath.str());
+            }
+            else
+            {
+                image.post_process(1.0f, 2.0f);
+                image.write_color_image(filepath.str());
+            }
+        }
     }
 }

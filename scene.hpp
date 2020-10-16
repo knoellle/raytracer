@@ -16,6 +16,7 @@ class Scene: public Entity
 
 bool Scene::hit(const Ray& r, const double t_min, const double t_max, HitData &data) const
 {
+    data.t = t_max;
     HitData temp_data;
     double closest_hit = t_max + 1;
     for (const auto &e : entities)

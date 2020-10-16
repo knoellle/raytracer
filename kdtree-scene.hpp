@@ -106,6 +106,7 @@ void KDTreeScene::update()
 bool KDTreeScene::hit(const Ray& r, const double t_min, const double t_max, HitData &data) const
 {
     // A tree exists, use it to find hit points
+    data.t = t_max;
     if (rootNode)
     {
         return rootNode->hit(r, t_min, t_max, data);
