@@ -232,8 +232,8 @@ int main(const int argc, const char* argv[])
             for (int sample = 0; sample < samples; sample++)
             {
                 HitData data;
-                const double u = float(i + random_unit() * 4) / float(width);
-                const double v = float(j + random_unit() * 4) / float(height);
+                const double u = float(i + random_unit()) / float(width);
+                const double v = float(j + random_unit()) / float(height);
                 const Ray r = camera.getRay(u, v);
                 c += cast_ray(r, s, 0, data);
                 t += data.t;
