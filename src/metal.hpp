@@ -17,7 +17,7 @@ class Metal: public Material
 
 bool Metal::scatter(const Ray& r, const HitData &data, Vec3 &attenuation, Ray &scattered) const
 {
-    Vec3 target_direction = reflect(r.direction().normalized(), data.normal);
+    Vec3 target_direction = data.normal.reflect(r.direction().normalized());
     scattered = Ray(data.hit_point, target_direction);
     attenuation = albedo;
     return true;

@@ -43,8 +43,8 @@ void Camera::update()
     double height = tan(vFOV * M_PI / 180 / 2) * 2;
     double width = height * aspect_ratio;
     Vec3 direction = (look_at - transform).normalized();
-    horizontal = (cross(direction, up)).normalized();
-    vertical = cross(horizontal, direction);
+    horizontal = (direction.cross(up)).normalized();
+    vertical = horizontal.cross(direction);
 
     horizontal = horizontal * width;
     vertical = vertical * height;

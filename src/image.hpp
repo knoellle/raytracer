@@ -2,7 +2,9 @@
 
 #include <chrono>
 #include <algorithm>
+#include <iostream>
 #include <vector>
+#include <functional>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -13,6 +15,7 @@ struct Pixel
 {
     Vec3 color;
     double depth;
+    int debug_counter;
     std::chrono::steady_clock::duration time;
 };
 
@@ -36,6 +39,7 @@ class Image
         bool write_color_image(const std::string filepath) const;
         bool write_time_image(const std::string filepath, const double outlier_percentage = 5) const;
         bool write_depth_image(const std::string filepath, const double outlier_percentage = 5) const;
+        bool write_transform_image(const std::string filepath, std::function<double (const Pixel&)> transform, const double outlier_percentage = 5) const;
     private:
         int _width;
         int _height;
@@ -89,44 +93,24 @@ bool Image::write_color_image(const std::string filepath) const
 
 bool Image::write_time_image(const std::string filepath, const double outlier_percentage) const
 {
-    const int num_pixels = _width * _height;
-    std::vector<std::chrono::steady_clock::duration> times;
-    times.resize(_width * _height);
-    std::transform(pixels.begin(), pixels.end(), times.begin(),
-    [](const Pixel &pixel) {
-        return pixel.time;
-    });
-
-    // calculate range
-    auto low = times.begin() + static_cast<int>(num_pixels * outlier_percentage / 100.0f);
-    std::nth_element(std::execution::seq, times.begin(), low, times.end());
-    auto high = times.begin() + static_cast<int>(num_pixels - num_pixels * outlier_percentage / 100.0f - 1);
-    std::nth_element(std::execution::seq, times.begin(), high, times.end());
-    
-    std::chrono::steady_clock::duration base = *low;
-    std::chrono::steady_clock::duration range = *high - base;
-
-    std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> pixels_8bit;
-    pixels_8bit.resize(_width * _height);
-    std::transform(std::execution::par_unseq, pixels.begin(), pixels.end(), pixels_8bit.begin(), [&](const Pixel &pixel)
-    {
-        const double duration = static_cast<double>(pixel.time.count() - base.count()) / range.count();
-        Vec3 c = Vec3(unit8_clamp(duration * 255.99));
-        return std::make_tuple(c[2], c[1], c[0]);
-    });
-    return stbi_write_png(filepath.c_str(), _width, _height, 3, pixels_8bit.data(), _width * 3);
+    return write_transform_image(filepath, [](const Pixel &pixel) {
+        return static_cast<double>(pixel.time.count());
+    }, outlier_percentage);
 }
 
 bool Image::write_depth_image(const std::string filepath, const double outlier_percentage) const
 {
+    return write_transform_image(filepath, [](const Pixel &pixel) {
+        return static_cast<double>(pixel.depth);
+    }, outlier_percentage);
+}
+
+bool Image::write_transform_image(const std::string filepath, std::function<double (const Pixel&)> transform, const double outlier_percentage) const
+{
     const int num_pixels = _width * _height;
     std::vector<double> values;
     values.resize(_width * _height);
-    std::transform(std::execution::par_unseq, pixels.begin(), pixels.end(), values.begin(),
-    [](const Pixel &pixel) {
-        // std::cout << pixel.depth << "\n";
-        return static_cast<double>(pixel.depth);
-    });
+    std::transform(std::execution::par_unseq, pixels.begin(), pixels.end(), values.begin(), transform);
 
     // calculate range
     auto low = values.begin() + static_cast<int>(num_pixels * outlier_percentage / 100.0f);
@@ -136,15 +120,13 @@ bool Image::write_depth_image(const std::string filepath, const double outlier_p
 
     auto base = *low;
     auto range = *high - base;
-    // base = 0;
     std::cout << *low << " " << *high << " " << base << " " << range << "\n";
-    // range = 5;
 
     std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> pixels_8bit;
     pixels_8bit.resize(_width * _height);
     std::transform(std::execution::par_unseq, pixels.begin(), pixels.end(), pixels_8bit.begin(), [&](const Pixel &pixel)
     {
-        const double duration = (pixel.depth - base) / range;
+        const double duration = (transform(pixel) - base) / range;
         Vec3 c = Vec3(unit8_clamp(duration * 255.99));
         return std::make_tuple(c[2], c[1], c[0]);
     });

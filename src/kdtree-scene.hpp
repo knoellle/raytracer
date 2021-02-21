@@ -26,13 +26,17 @@ class KDTreeScene: public Scene
         virtual void update() override;
         virtual bool hit(const Ray& r, const double t_min, const double t_max, HitData &data) const override;
 
+
     private:
         std::shared_ptr<KDN> construct(std::vector<std::shared_ptr<Entity>> entities, const int depth);
         std::shared_ptr<KDN> rootNode;
 };
 
+long hit_check_counter;
+
 bool KDN::hit(const Ray& r, const double t_min, const double t_max, HitData &data) const
 {
+    hit_check_counter++;
     if (!boundingBox.intersect(r))
     {
         return false;
@@ -95,6 +99,7 @@ bool KDN::hit(const Ray& r, const double t_min, const double t_max, HitData &dat
 
 KDTreeScene::KDTreeScene()
 {
+    hit_check_counter = 0;
 }
 
 void KDTreeScene::update()
